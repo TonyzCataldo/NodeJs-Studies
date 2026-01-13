@@ -52,7 +52,13 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
-  RefreshToken: 'RefreshToken'
+  RefreshToken: 'RefreshToken',
+  Course: 'Course',
+  Subject: 'Subject',
+  Topic: 'Topic',
+  Question: 'Question',
+  UserAttempt: 'UserAttempt',
+  UserCurrentSession: 'UserCurrentSession'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -77,6 +83,8 @@ export const UserScalarFieldEnum = {
   email: 'email',
   password_hash: 'password_hash',
   role: 'role',
+  emailVerifiedAt: 'emailVerifiedAt',
+  verificationToken: 'verificationToken',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -87,14 +95,81 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const RefreshTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  sessionId: 'sessionId',
   tokenHash: 'tokenHash',
   createdAt: 'createdAt',
   expiresAt: 'expiresAt',
   revokedAt: 'revokedAt',
+  replacedByTokenId: 'replacedByTokenId',
   ipAddress: 'ipAddress'
 } as const
 
 export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
+
+
+export const CourseScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  createdAt: 'createdAt'
+} as const
+
+export type CourseScalarFieldEnum = (typeof CourseScalarFieldEnum)[keyof typeof CourseScalarFieldEnum]
+
+
+export const SubjectScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  courseId: 'courseId',
+  createdAt: 'createdAt'
+} as const
+
+export type SubjectScalarFieldEnum = (typeof SubjectScalarFieldEnum)[keyof typeof SubjectScalarFieldEnum]
+
+
+export const TopicScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  subjectId: 'subjectId',
+  createdAt: 'createdAt'
+} as const
+
+export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
+
+
+export const QuestionScalarFieldEnum = {
+  id: 'id',
+  statement: 'statement',
+  options: 'options',
+  correctOptionId: 'correctOptionId',
+  subjectId: 'subjectId',
+  topicId: 'topicId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const UserAttemptScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  questionId: 'questionId',
+  isCorrect: 'isCorrect',
+  chosenOptionId: 'chosenOptionId',
+  createdAt: 'createdAt'
+} as const
+
+export type UserAttemptScalarFieldEnum = (typeof UserAttemptScalarFieldEnum)[keyof typeof UserAttemptScalarFieldEnum]
+
+
+export const UserCurrentSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  data: 'data',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserCurrentSessionScalarFieldEnum = (typeof UserCurrentSessionScalarFieldEnum)[keyof typeof UserCurrentSessionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -103,6 +178,13 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: 'JsonNull'
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -119,4 +201,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull',
+  AnyNull: 'AnyNull'
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

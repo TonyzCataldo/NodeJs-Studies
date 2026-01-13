@@ -1,8 +1,11 @@
 export interface RefreshTokenEntity {
   id: string;
   userId: string;
+  sessionId: string;
   tokenHash: string;
-  createdAt: string;
-  revokedAt?: string;
-  ipAddress?: string;
+  createdAt: Date;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  ipAddress: string | null;
+  replacedByTokenId: string | null;
 }

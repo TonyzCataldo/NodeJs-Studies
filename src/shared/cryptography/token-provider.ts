@@ -10,7 +10,7 @@ export interface VerifyTokenOutput {
   sub: string; // subject
   type: TokenType;
   payload: Record<string, any>;
-  exp: Number | undefined;
+  exp: number | undefined;
 }
 
 export interface TokenProvider {

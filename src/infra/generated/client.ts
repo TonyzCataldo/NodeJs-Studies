@@ -49,3 +49,33 @@ export type User = Prisma.UserModel
  * 
  */
 export type RefreshToken = Prisma.RefreshTokenModel
+/**
+ * Model Course
+ * 
+ */
+export type Course = Prisma.CourseModel
+/**
+ * Model Subject
+ * 
+ */
+export type Subject = Prisma.SubjectModel
+/**
+ * Model Topic
+ * 
+ */
+export type Topic = Prisma.TopicModel
+/**
+ * Model Question
+ * 
+ */
+export type Question = Prisma.QuestionModel
+/**
+ * Model UserAttempt
+ * 
+ */
+export type UserAttempt = Prisma.UserAttemptModel
+/**
+ * Model UserCurrentSession
+ * 
+ */
+export type UserCurrentSession = Prisma.UserCurrentSessionModel

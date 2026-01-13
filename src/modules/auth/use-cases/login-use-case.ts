@@ -1,10 +1,13 @@
 import { HashProvider } from "../../../shared/cryptography/hash-provider";
 import { HashRefreshTokenProvider } from "../../../shared/cryptography/hash-refresh-token";
+import { OpaqueTokenProvider } from "../../../shared/cryptography/opaque-token-provider";
 import { TokenProvider } from "../../../shared/cryptography/token-provider";
 import { addDays } from "../../../shared/date/add-days";
 import { AuthenticationError } from "../../../shared/errors/authentication-error";
+import { EmailNotVerifiedError } from "../../../shared/errors/email-not-verified-error";
 import { UserRepository } from "../../users/repositories/user-repository";
 import { RefreshTokenRepository } from "../repositories/refresh-token-repository";
+import crypto from "node:crypto";
 
 interface LoginUseCaseInput {
   email: string;
@@ -23,7 +26,8 @@ export class LoginUseCase {
     private refreshTokenRepository: RefreshTokenRepository,
     private hashProvider: HashProvider,
     private hashRefreshTokenProvider: HashRefreshTokenProvider,
-    private tokenProvider: TokenProvider
+    private tokenProvider: TokenProvider,
+    private opaqueTokenProvider: OpaqueTokenProvider
   ) {}
 
   async execute({
@@ -36,6 +40,11 @@ export class LoginUseCase {
     if (!user) {
       throw new AuthenticationError();
     }
+
+    if (!user.emailVerifiedAt) {
+      throw new EmailNotVerifiedError();
+    }
+
     const compare = await this.hashProvider.compare(
       password,
       user.password_hash
@@ -52,19 +61,21 @@ export class LoginUseCase {
       },
     });
 
-    const refreshToken = await this.tokenProvider.sign({
-      subject: user.id,
-      type: "refresh",
-      payload: {
-        role: user.role ?? null,
-      },
-    });
+    const refreshToken = this.opaqueTokenProvider.generateOpaqueToken(48);
+    const sessionId = crypto.randomUUID();
+    const newTokenId = crypto.randomUUID();
+    const hashRefreshToken = this.hashRefreshTokenProvider.hash(refreshToken);
 
-    await this.refreshTokenRepository.create({
+    await this.refreshTokenRepository.revokeAllAndCreate({
       userId: user.id,
-      expiresAt: addDays(new Date(), 7),
-      tokenHash: this.hashRefreshTokenProvider.hash(refreshToken),
-      ipAddress,
+      revokedAt: new Date(),
+      token: {
+        id: newTokenId,
+        sessionId: sessionId,
+        tokenHash: hashRefreshToken,
+        expiresAt: addDays(new Date(), 7),
+        ipAddress: ipAddress,
+      },
     });
 
     return {

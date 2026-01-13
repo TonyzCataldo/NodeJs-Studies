@@ -13,10 +13,27 @@ export class InMemoryUserRepository implements UserRepository {
       name: data.name,
       email: data.email,
       password_hash: data.password_hash,
+      verificationToken: data.verificationToken ?? null,
+      emailVerifiedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     this.items.push(user);
+    return user;
+  }
+  async findById(id: string): Promise<UserEntity | null> {
+    const user = this.items.find((item) => item.id === id);
+    return user ?? null;
+  }
+  async findByVerificationToken(token: string): Promise<UserEntity | null> {
+    const user = this.items.find((item) => item.verificationToken === token);
+    return user ?? null;
+  }
+  async save(user: UserEntity): Promise<UserEntity> {
+    const index = this.items.findIndex((item) => item.id === user.id);
+    if (index >= 0) {
+      this.items[index] = user;
+    }
     return user;
   }
 }

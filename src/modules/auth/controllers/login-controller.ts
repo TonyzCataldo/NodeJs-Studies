@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import z from "zod";
 import { MakeLoginUseCase } from "../use-cases/factories/make-login-use-case";
 import { AuthenticationError } from "../../../shared/errors/authentication-error";
-import { env } from "../../../shared/env/index";
 
 const LoginBodySchema = z.object({
   email: z.email(),
@@ -24,19 +23,26 @@ export async function LoginController(
       password,
       ipAddress,
     });
-    reply.setCookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === "development",
-      sameSite: "lax",
-      path: "/auth/refresh",
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
-    });
-    return reply.status(200).send({
+
+    //opção para enviar o refresh token direto pro cookie
+
+    // reply.setCookie("refreshToken", refreshToken, {
+    //   httpOnly: true,
+    //   secure: env.NODE_ENV !== "development",
+    //   sameSite: "lax",
+    //   path: "/auth/refresh",
+    //   maxAge: 60 * 60 * 24 * 7, // 7 dias
+    // });
+    return reply.header("Cache-Control", "no-store").code(200).send({
       accessToken,
+      refreshToken,
     });
   } catch (error) {
     if (error instanceof AuthenticationError) {
-      reply.code(401).send({ message: error.message });
+      return reply
+        .header("Cache-Control", "no-store")
+        .code(401)
+        .send({ message: error.message });
     }
     throw error;
   }

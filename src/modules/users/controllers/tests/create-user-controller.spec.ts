@@ -13,6 +13,7 @@ describe("create-user-controller", () => {
     const reply: any = {
       code: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
+      header: vi.fn().mockReturnThis(),
     };
     return reply;
   }
@@ -38,8 +39,10 @@ describe("create-user-controller", () => {
       email: "user@email.com",
       password: "123456",
     });
+
+    expect(reply.header).toHaveBeenCalledWith("Cache-Control", "no-store");
     expect(reply.code).toHaveBeenCalledWith(201);
-    expect(reply.send).toHaveBeenCalledWith();
+    expect(reply.send).toHaveBeenCalledOnce();
   });
 
   it("should rethrows ZodError and does not call use case", async () => {
@@ -74,6 +77,7 @@ describe("create-user-controller", () => {
     const reply = makeReplyMock();
     await createUserController(request, reply);
 
+    expect(reply.header).toHaveBeenCalledWith("Cache-Control", "no-store");
     expect(reply.code).toHaveBeenCalledWith(409);
     expect(reply.send).toHaveBeenCalledWith({ message: "User already exists" });
   });

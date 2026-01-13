@@ -2,6 +2,9 @@ import { UserRepository } from "../repositories/user-repository";
 import { UserAlreadyExistsError } from "../../../shared/errors/user-already-exists-error";
 import { HashProvider } from "../../../shared/cryptography/hash-provider";
 import { UserEntity } from "../entities/user-entity";
+import { IMailProvider } from "../../../shared/providers/mail-provider";
+import { randomUUID } from "node:crypto";
+import { getVerificationEmailTemplate } from "../../../shared/templates/verification-email-template";
 
 interface CreateUserUseCaseInput {
   name: string;
@@ -16,7 +19,8 @@ interface CreateUserUseCaseOutput {
 export class CreateUserUseCase {
   constructor(
     private userRepository: UserRepository,
-    private hashProvider: HashProvider
+    private hashProvider: HashProvider,
+    private mailProvider: IMailProvider
   ) {}
 
   async execute({
@@ -31,12 +35,25 @@ export class CreateUserUseCase {
     }
 
     const password_hash = await this.hashProvider.hash(password);
+    const verificationToken = randomUUID();
 
     const user = await this.userRepository.create({
       name,
       email,
       password_hash,
+      verificationToken,
     });
+
+    const verificationLink = `${
+      process.env.APP_URL || "http://localhost:3000"
+    }/verify?token=${verificationToken}`;
+    const emailBody = getVerificationEmailTemplate({ name, verificationLink });
+
+    await this.mailProvider.sendMail(
+      email,
+      "Verifique seu email - Tático Questões",
+      emailBody
+    );
 
     return {
       user: {

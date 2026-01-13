@@ -18,20 +18,134 @@ model User {
   email         String         @unique
   password_hash String
   role          roleType       @default(user)
+  
+  emailVerifiedAt   DateTime?
+  verificationToken String?
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @default(now())
   refreshTokens RefreshToken[]
+  attempts        UserAttempt[]
+  currentSession  UserCurrentSession?
 }
 
 model RefreshToken {
-  id        String    @id @default(uuid())
-  userId    String
-  tokenHash String    @unique
-  createdAt DateTime  @default(now())
-  expiresAt DateTime
-  revokedAt DateTime?
-  ipAddress String?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid())
+  userId            String
+  sessionId         String // sid: sessão por device/login
+  tokenHash         String    @unique
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?
+  ipAddress         String?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([sessionId])
+  @@index([expiresAt])
+}
+
+model Course {
+  id        String    @id @default(uuid())
+  name      String    @unique // "Engenharia de Software", "Direito"
+  
+  subjects  Subject[]
+
+  createdAt DateTime  @default(now())
+}
+
+model Subject {
+  id        String     @id @default(uuid())
+  name      String     // "Matemática", "Direito Constitucional"
+  
+  courseId  String
+  course    Course     @relation(fields: [courseId], references: [id])
+  
+  questions Question[]
+
+  createdAt DateTime   @default(now())
+
+  topics    Topic[]
+
+  @@index([courseId])
+}
+
+model Topic {
+  id        String   @id @default(uuid())
+  name      String
+  
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  
+  questions Question[]
+
+  createdAt DateTime @default(now())
+
+  @@index([subjectId])
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  statement     String   
+  
+  options       Json     
+  
+  correctOptionId String 
+  
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id])
+
+  topicId       String?
+  topic         Topic?   @relation(fields: [topicId], references: [id])
+  
+  assets        QuestionAsset[]
+  attempts      UserAttempt[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  @@index([subjectId])
+  @@index([topicId])
+}
+
+model QuestionAsset {
+  id          String   @id @default(uuid())
+  type        String   // "IMAGE", "TEXT"
+  content     String   // URL or Text content
+  
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model UserAttempt {
+  id         String   @id @default(uuid())
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  isCorrect  Boolean  
+  chosenOptionId String 
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([userId])
+  @@index([questionId])
+}
+
+model UserCurrentSession {
+  id        String   @id @default(uuid())
+  
+  userId    String   @unique 
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ex: { "questionIds": ["q1", "q2"], "total": 10, "filters": {...} }
+  data      Json     
+
+  updatedAt DateTime @updatedAt
 }

@@ -21,9 +21,12 @@ export async function createUserController(
     await createUserUseCase.execute({ name, email, password });
   } catch (error) {
     if (error instanceof UserAlreadyExistsError) {
-      return reply.code(409).send({ message: error.message });
+      return reply
+        .header("Cache-Control", "no-store")
+        .code(409)
+        .send({ message: error.message });
     }
     throw error;
   }
-  return reply.code(201).send();
+  return reply.header("Cache-Control", "no-store").code(201).send();
 }

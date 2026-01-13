@@ -11,6 +11,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_EXPIRES: z.enum(["15m"]),
   JWT_REFRESH_EXPIRES: z.enum(["7d"]),
+  REDIS_URL: z.string().min(3),
 });
 
 const _env = envSchema.safeParse(process.env);

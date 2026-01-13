@@ -8,22 +8,30 @@
     "dev": "tsx watch src/infra/http/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:infra:up": "docker compose -f docker-compose.test.yml up -d",
+    "test:infra:down": "docker compose -f docker-compose.test.yml down -v",
+    "test:infra:status": "docker compose -f docker-compose.test.yml ps",
+    "test:integration": "docker compose -f docker-compose.test.yml up -d --wait && node --env-file=.env.test ./node_modules/.bin/prisma migrate deploy && node --env-file=.env.test ./node_modules/.bin/vitest run --config vitest.integration.config.ts --no-file-parallelism"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
+    "@fastify/rate-limit": "^10.3.0",
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
+    "@types/nodemailer": "^7.0.5",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "fastify": "^5.6.2",
     "fastify-plugin": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^7.0.12",
     "prisma": "^7.1.0",
+    "redis": "^5.10.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.15",
     "zod": "^4.1.13"
@@ -32,7 +40,11 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.2",
+    "@types/supertest": "^6.0.3",
+    "dotenv-cli": "^11.0.0",
+    "supertest": "^7.1.4",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.3"
   }
 }

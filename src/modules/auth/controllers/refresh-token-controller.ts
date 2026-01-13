@@ -1,26 +1,44 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { MakeRefreshTokenUseCase } from "../use-cases/factories/make-refresh-token-use-case";
 import { AuthenticationError } from "../../../shared/errors/authentication-error";
+import z from "zod";
 
 export async function RefreshTokenController(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const refreshToken = request.cookies.refreshToken;
-  if (!refreshToken) {
-    return reply.status(401).send({ message: "Authentication Error." });
+  const RefreshTokenBodySchema = z.object({
+    refreshToken: z.string().min(6),
+  });
+
+  const { refreshToken } = RefreshTokenBodySchema.parse(request.body);
+
+  const oldRefreshToken = refreshToken;
+  if (!oldRefreshToken) {
+    return reply
+      .header("Cache-Control", "no-store")
+      .code(401)
+      .send({ message: "Authentication Error." });
   }
 
   const refreshUseCase = MakeRefreshTokenUseCase();
 
   try {
-    const { accessToken } = await refreshUseCase.execute({ refreshToken });
+    const { accessToken, refreshToken } = await refreshUseCase.execute({
+      ipAddress: request.ip,
+      refreshToken: oldRefreshToken,
+    });
 
-    return reply.status(200).send({ accessToken });
+    return reply
+      .header("Cache-Control", "no-store")
+      .code(200)
+      .send({ accessToken, refreshToken });
   } catch (error) {
-    reply.clearCookie("refreshToken", { path: "/auth/refresh" });
     if (error instanceof AuthenticationError) {
-      return reply.status(401).send({ message: error.message });
+      return reply
+        .header("Cache-Control", "no-store")
+        .code(401)
+        .send({ message: error.message });
     }
     throw error;
   }

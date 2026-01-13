@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.1.0",
   "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
   "activeProvider": "postgresql",
-  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../src/infra/generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum roleType {\n  user\n  admin\n}\n\nmodel User {\n  id            String         @id @default(uuid())\n  name          String\n  email         String         @unique\n  password_hash String\n  role          roleType       @default(user)\n  createdAt     DateTime       @default(now())\n  updatedAt     DateTime       @default(now())\n  refreshTokens RefreshToken[]\n}\n\nmodel RefreshToken {\n  id        String    @id @default(uuid())\n  userId    String\n  tokenHash String    @unique\n  createdAt DateTime  @default(now())\n  expiresAt DateTime\n  revokedAt DateTime?\n  ipAddress String?\n  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId])\n}\n",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"../src/infra/generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nenum roleType {\n  user\n  admin\n}\n\nmodel User {\n  id            String   @id @default(uuid())\n  name          String\n  email         String   @unique\n  password_hash String\n  role          roleType @default(user)\n\n  emailVerifiedAt   DateTime?\n  verificationToken String?\n\n  createdAt      DateTime            @default(now())\n  updatedAt      DateTime            @default(now())\n  refreshTokens  RefreshToken[]\n  attempts       UserAttempt[]\n  currentSession UserCurrentSession?\n}\n\nmodel RefreshToken {\n  id                String    @id @default(uuid())\n  userId            String\n  sessionId         String // sid: sessão por device/login\n  tokenHash         String    @unique\n  createdAt         DateTime  @default(now())\n  expiresAt         DateTime\n  revokedAt         DateTime?\n  replacedByTokenId String?\n  ipAddress         String?\n  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId])\n  @@index([sessionId])\n  @@index([expiresAt])\n}\n\nmodel Course {\n  id   String @id @default(uuid())\n  name String @unique // \"Engenharia de Software\", \"Direito\"\n\n  subjects Subject[]\n\n  createdAt DateTime @default(now())\n}\n\nmodel Subject {\n  id   String @id @default(uuid())\n  name String // \"Matemática\", \"Direito Constitucional\"\n\n  courseId String\n  course   Course @relation(fields: [courseId], references: [id])\n\n  questions Question[]\n\n  createdAt DateTime @default(now())\n\n  topics Topic[]\n\n  @@index([courseId])\n}\n\nmodel Topic {\n  id   String @id @default(uuid())\n  name String\n\n  subjectId String\n  subject   Subject @relation(fields: [subjectId], references: [id])\n\n  questions Question[]\n\n  createdAt DateTime @default(now())\n\n  @@index([subjectId])\n}\n\nmodel Question {\n  id        String @id @default(uuid())\n  statement String\n\n  options Json\n\n  correctOptionId String\n\n  subjectId String\n  subject   Subject @relation(fields: [subjectId], references: [id])\n\n  topicId String?\n  topic   Topic?  @relation(fields: [topicId], references: [id])\n\n  attempts UserAttempt[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @default(now())\n\n  @@index([subjectId])\n  @@index([topicId])\n}\n\nmodel UserAttempt {\n  id String @id @default(uuid())\n\n  userId String\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  questionId String\n  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)\n\n  isCorrect      Boolean\n  chosenOptionId String\n\n  createdAt DateTime @default(now())\n\n  @@index([userId])\n  @@index([questionId])\n}\n\nmodel UserCurrentSession {\n  id String @id @default(uuid())\n\n  userId String @unique\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  // Ex: { \"questionIds\": [\"q1\", \"q2\"], \"total\": 10, \"filters\": {...} }\n  data Json\n\n  updatedAt DateTime @updatedAt\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password_hash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"roleType\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"RefreshTokenToUser\"}],\"dbName\":null},\"RefreshToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tokenHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"revokedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"ipAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"RefreshTokenToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password_hash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"roleType\"},{\"name\":\"emailVerifiedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"verificationToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"RefreshTokenToUser\"},{\"name\":\"attempts\",\"kind\":\"object\",\"type\":\"UserAttempt\",\"relationName\":\"UserToUserAttempt\"},{\"name\":\"currentSession\",\"kind\":\"object\",\"type\":\"UserCurrentSession\",\"relationName\":\"UserToUserCurrentSession\"}],\"dbName\":null},\"RefreshToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sessionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tokenHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"revokedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"replacedByTokenId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"ipAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"RefreshTokenToUser\"}],\"dbName\":null},\"Course\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subjects\",\"kind\":\"object\",\"type\":\"Subject\",\"relationName\":\"CourseToSubject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Subject\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToSubject\"},{\"name\":\"questions\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"QuestionToSubject\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"topics\",\"kind\":\"object\",\"type\":\"Topic\",\"relationName\":\"SubjectToTopic\"}],\"dbName\":null},\"Topic\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subjectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subject\",\"kind\":\"object\",\"type\":\"Subject\",\"relationName\":\"SubjectToTopic\"},{\"name\":\"questions\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"QuestionToTopic\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Question\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"statement\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"options\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"correctOptionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subjectId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subject\",\"kind\":\"object\",\"type\":\"Subject\",\"relationName\":\"QuestionToSubject\"},{\"name\":\"topicId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"topic\",\"kind\":\"object\",\"type\":\"Topic\",\"relationName\":\"QuestionToTopic\"},{\"name\":\"attempts\",\"kind\":\"object\",\"type\":\"UserAttempt\",\"relationName\":\"QuestionToUserAttempt\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"UserAttempt\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserAttempt\"},{\"name\":\"questionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"question\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"QuestionToUserAttempt\"},{\"name\":\"isCorrect\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"chosenOptionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"UserCurrentSession\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"UserToUserCurrentSession\"},{\"name\":\"data\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -193,6 +193,66 @@ export interface PrismaClient<
     * ```
     */
   get refreshToken(): Prisma.RefreshTokenDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.course`: Exposes CRUD operations for the **Course** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Courses
+    * const courses = await prisma.course.findMany()
+    * ```
+    */
+  get course(): Prisma.CourseDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.subject`: Exposes CRUD operations for the **Subject** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Subjects
+    * const subjects = await prisma.subject.findMany()
+    * ```
+    */
+  get subject(): Prisma.SubjectDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.topic`: Exposes CRUD operations for the **Topic** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Topics
+    * const topics = await prisma.topic.findMany()
+    * ```
+    */
+  get topic(): Prisma.TopicDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.question`: Exposes CRUD operations for the **Question** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Questions
+    * const questions = await prisma.question.findMany()
+    * ```
+    */
+  get question(): Prisma.QuestionDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.userAttempt`: Exposes CRUD operations for the **UserAttempt** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserAttempts
+    * const userAttempts = await prisma.userAttempt.findMany()
+    * ```
+    */
+  get userAttempt(): Prisma.UserAttemptDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.userCurrentSession`: Exposes CRUD operations for the **UserCurrentSession** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserCurrentSessions
+    * const userCurrentSessions = await prisma.userCurrentSession.findMany()
+    * ```
+    */
+  get userCurrentSession(): Prisma.UserCurrentSessionDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

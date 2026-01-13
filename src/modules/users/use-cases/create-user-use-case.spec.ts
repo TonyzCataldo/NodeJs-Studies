@@ -3,16 +3,19 @@ import { FakeHashProvider } from "../../../shared/cryptography/fakes/fake-hash-p
 import { InMemoryUserRepository } from "../repositories/implementations/in-memory-user-repository";
 import { CreateUserUseCase } from "./create-user-use-case";
 import { UserAlreadyExistsError } from "../../../shared/errors/user-already-exists-error";
+import { FakeMailProvider } from "../../../shared/providers/fakes/fake-mail-provider";
 
 let userRepository: InMemoryUserRepository;
 let hashProvider: FakeHashProvider;
+let mailProvider: FakeMailProvider;
 let sut: CreateUserUseCase;
 
 describe("CreateUserUseCase", () => {
   beforeEach(() => {
     userRepository = new InMemoryUserRepository();
     hashProvider = new FakeHashProvider();
-    sut = new CreateUserUseCase(userRepository, hashProvider);
+    mailProvider = new FakeMailProvider();
+    sut = new CreateUserUseCase(userRepository, hashProvider, mailProvider);
   });
 
   it("should create a user with a hashed password", async () => {
